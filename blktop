@@ -135,15 +135,15 @@ def devlist(config):
             continue
     # skip empty devices never has an IO
         if is_any_io(get_stat(dev)):
-        devs[dev] = {}
-        devs[dev]['sector_size'] = get_sector_size(
-            dev)  # (just for test) FIXME
-        devs[dev]['id'] = 'FIXME'  # FIXME
-        if 'md' in dev:
-            devs[dev]['is_md'] = True
-        else:
-            devs[dev]['is_md'] = False
-        devs[dev]['alias'] = get_alias(dev)
+            devs[dev] = {}
+            devs[dev]['sector_size'] = get_sector_size(
+                dev)  # (just for test) FIXME
+            devs[dev]['id'] = 'FIXME'  # FIXME
+            if 'md' in dev:
+                devs[dev]['is_md'] = True
+            else:
+                devs[dev]['is_md'] = False
+            devs[dev]['alias'] = get_alias(dev)
     return devs
 
 
@@ -180,8 +180,10 @@ def calc_single_delta(new, old, sector_size):
             'write_sectors'] / retval['write_ios']
     except:
         retval['avg write block size'] = 0
-    retval['latency'] = safe_div(float(retval['read_ticks'] + retval['write_ticks'] + retval[
-                                 'time_in_queue']), retval['read_ios'] + retval['write_ios'])
+    retval['latency'] = safe_div(float(retval['read_ticks'] +
+                                       retval['write_ticks'] + retval[
+                                 'time_in_queue']), retval['read_ios'] +
+                                 retval['write_ios'])
     return retval
 
 
@@ -214,7 +216,7 @@ def tick(devlist, delay, window_size=60):
         yield new delta for all devices in devlist
     '''
     old = scan_all(devlist)
-    while 1:
+    while True:
         time.sleep(delay)
         new = scan_all(devlist)
         yield (calc_delta(old, new, devlist))
@@ -244,9 +246,9 @@ def fix(l, scale=1000, force_high=False):
        create pagination and convert numeric values to ISO-based format
        (f.e. 1k 8M and so on)
     '''
-    if type(l) == type(""):
+    if isinstance(l, type("")):
         value = l[0:8]
-    elif type(l) == type(0.0):
+    elif isinstance(l, type(0.0)):
         value = make_k(round(l, 2), scale, force_high)
     else:
         value = make_k(l)
@@ -261,7 +263,7 @@ def prepare_header(devlist):
        size calculated as maximal device alias name (but no more than 32 chars)
     '''
     upper_fields = ("", "READ", "|", "", "WRITE", "|")
-    lower_fields = ('IOPS', 'bytes', 'req.size', 'IOPS',  'bytes',
+    lower_fields = ('IOPS', 'bytes', 'req.size', 'IOPS', 'bytes',
                     'req.size', 'latency', 'queue', 'IO time (ms)')
     u = " " * max_name_size + '| ' + " ".join([fix(a) for a in upper_fields])
     l = "|".join(["Dev name".rjust(max_name_size, ' ')] + [fix(a)
@@ -342,7 +344,6 @@ def view(cur, devlist):
 
     for a in cur.iterkeys():
         print prepare_line(a, cur[a], devlist[a])
-    return None
 
 
 def main():
